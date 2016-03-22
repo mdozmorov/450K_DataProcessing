@@ -50,17 +50,17 @@ detectionPval.filter <- function(methLumi_data, detectionPval.threshold=0.01, de
 # Args: 
 #  - methLumi_data: methylumi object
 #	- detectionPval.threshold: detection p-value threshold, set the threshold of significant signals (ok if p-value < detectionPval.threshold). Set to 0.01 by default.
-#	- detectionPval.perc.threshold: threshold for the percentage of significant probes per sample. If a sample has less than this threshold it is coonsidered as bad quality. Set to 80% by defult.
+#	- detectionPval.perc.threshold: threshold for the percentage of significant probes across samples. If a probe is detected in less percent of the samples than this threshold it is coonsidered as bad quality. Set to 10% by defult.
 #	- projectName: a string used to name the report file about sample quality. If NULL (by default) no report provided.
 #	- PATH: a string setting the path for the folder where the report will be saved. Set to current folder by default.
 #
 # Returns: an updated methylumi object.
 
 
-detectionPval.filter2 <- function(methLumi_data, detectionPval.threshold=0.01, detectionPval.perc.threshold=1, projectName = NULL, PATH="./"){
+detectionPval.filter2 <- function(methLumi_data, detectionPval.threshold=0.01, detectionPval.perc.threshold=10, projectName = NULL, PATH="./"){
   
   #get detection p-values
-  detectPval <- assayDataElement(methLumi_data, "detection")
+  detectPval <- pvals(methLumi_data) # assayDataElement(methLumi_data, "detection")
   #get sample names
   probeNames <- rownames(detectPval)
   nbSignifPval <- as.vector(rowSums(detectPval <= detectionPval.threshold))
@@ -68,7 +68,7 @@ detectionPval.filter2 <- function(methLumi_data, detectionPval.threshold=0.01, d
     
   #for each probe compute the number and % or relevant signal (detection p-value < detectionPval.threshold)
   
-  nrMax <- (ncol(methLumi_data)/100)*detectionPval.perc.threshold
+  nrMax <- (ncol(methLumi_data) * detectionPval.perc.threshold)/100
   #get "bad" samples indices
   index2remove <- which(rowSums(detectPval > detectionPval.threshold) > nrMax)
   
@@ -79,7 +79,7 @@ detectionPval.filter2 <- function(methLumi_data, detectionPval.threshold=0.01, d
   #remove "bad" samples from methylumi object
   if(length(index2remove)>0) methLumi_data <- methLumi_data[-index2remove,]
   
-  detectPval <- assayDataElement(methLumi_data, "detection")
+  detectPval <- pvals(methLumi_data) # assayDataElement(methLumi_data, "detection")
   probeNames <- rownames(detectPval)
   index <- order(rowSums(detectPval), decreasing=T)
   
